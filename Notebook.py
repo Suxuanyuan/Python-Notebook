@@ -82,9 +82,18 @@ try:
 	float(b)  # 若此句报错，直接执行except:后语句
 except:
 	print('b不能进行float转换')
+	
 # (2) 报错提示功能
 assert a >= b, 'xxx'  # 如果条件语句不成立，则print后续字符串xxx
 
+# (3) 类别查看功能
+A = np.array([0, 1, 2])
+if type(A) is numpy.ndarray:
+	print('fuck')
+A = [0, 1, 2]
+if type(A) is list:
+	print('fuck')
+	
 
 
 # 2 自定义函数导入 & 路径获取
