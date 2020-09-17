@@ -198,6 +198,8 @@ list1 = ['a', 'b', 'c', 'd']
 del list1[0]  # 按照索引删除list元素
 list1.remove('b')  # 按照元素值删除list元素
 list1.pop()  # 删除最后一个元素
+# 消除list中的重复项
+List_union = list(set(List))
 # array删除
 A = np.arange(0, 20).reshape(-1, 4) # 一个5行4列数组
 np.delete(arr=A, obj=1, axis=1)  # 对数组A, 删除第二列
@@ -216,6 +218,7 @@ set(A).union(B)
 set(A) - set(B)
 & set(A).difference(B)
 
+	
 
 # 4 数据类型与数据规模
 
