@@ -375,6 +375,13 @@ DF = pd.DataFrame(data=np.arange(0, 10).reshape(5, 2), index=pd.date_range('2018
 DF.rename({'a': 'aa'}, inplace=True)  # 对于DataFrame的某一列进行变量名替换的方法  
 DF.columns = ['c', 'd']  # 对全体列名进行替换
 
+# 5.8 DataFrame数据统计基本操作合集
+# DataFrame基本数据属性统计
+DataFrame.describe()  # 对DataFrame各列数据点数、最大值、最小值等属性进行统计
+# DataFrame乱序抽取数据
+DataFrame_localshuffle = DataFrame.sample(frac=0.2, random_state=1)  # 从原始DataFrame中随机抽取20%数据，random_state是随机种子代号
+
+
 # 6 pandas中的时间序列处理
 
 # 6.1 个体对象3类基本时间格式
