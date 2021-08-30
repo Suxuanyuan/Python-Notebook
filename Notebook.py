@@ -66,6 +66,18 @@ A_new = [a ** 2 for a in A]
 name = ['苏铉元', '马月明', '苏湘茗']
 for i, value in enumerate(name):       # 通过enumerate函数，i捕获了当前序号，value捕获了name[i]
     print('第 {} 个人的名字是 {} .'.format(i + 1, value))
+# break: 直接跳出所有循环
+for i in range(10):
+    if i > 5:
+        break  # 满足i > 5则终止所有循环
+    else:
+        print(i)
+# continue: 仅跳出某次循环
+for i in range(10):
+    if i % 2 == 0:
+        continue  # 满足i % 2 == 0则跳过这次循环
+    else:
+        print(i)
 
 #1.6 print字符串换行
 print('abc\nde')  # 在字符串间添加'\n'即可实现字符串打印换行，前后不需要添加空格
@@ -443,14 +455,12 @@ sys.path.append(self_module_path)  # 将自定义模块路径位置加入，才�
 # 读取本地文件时，如果不设置绝对路径，所有文件读入、保存都必须在.py同一个文件夹下面进行
 
 
+# 8 pytorch相关
 import torch
 import torch.nn as nn
 import numpy as np
 
-# 8 pytorch相关
-
 # 8.1 创建pytorch
-
 # 使用函数创建--基本和numpy语法一致
 a = torch.eye(10)
 a = torch.arange(0, 10).reshape(-1, 2)
@@ -464,7 +474,6 @@ bb = torch.IntTensor(2, 4).zero_()  # Int32
 
 # 8.2 数据类型&数据规整
 # 参考网址: https://ptorch.com/news/71.html
-
 # 数据类型转换
 c = torch.arange(0, 20)
 c = c.int()  # 转化为int32
@@ -478,7 +487,6 @@ print(c_2.shape)
 print(c_1.size)
 
 # 8.3 数据切分&数据拼接&数据索引
-
 # 数据拼接
 d_1 = torch.arange(0, 10).reshape(-1, 2)
 d_2 = torch.arange(0, 10).reshape(-1, 2)
@@ -513,7 +521,6 @@ number = tensor[indices]
 indices = tensor[:, 0] < number  # 指定某些维度进行筛选也是完全可以
 
 # 8.4 小技巧
-
 # 上/下三角矩阵
 down_3 = np.triu(np.ones((10, 10)), k=1)  # 生成一个下三角矩阵
 up_3 = np.tril(np.ones((10, 10)), k=1)  # 生成一个上三角矩阵
@@ -523,7 +530,6 @@ up_3 = torch.from_numpy(down_3) == 0  # 生成相反矩阵(上三角矩阵)
 xx.squeeze()  # 不指定维度，会自动将变量xx中元素为1的维度压缩
 
 # 8.5 GPU相关
-
 # 查看GPU状态
 print(torch.cuda.is_available())  # GPU是否可用
 print(torch.cuda.device_count())  # GPU个数
@@ -538,9 +544,59 @@ for name, parameter in model.named_parameters():
 # 查看模型参数总量
 print(sum(params.numel() for params in model.parameters()))
 
+# 8.7 Dataset、DataLoader、Sampler
+# Dataset、DataLoader、Sampler是pytorch3种典型的pytorch官方设定，帮助用户按照一定的需求，从原始数据中生成batch数据
+
+# (1) Dataset：有3种官方函数,  def __init__(self, args)、def __getitem__(self, idx)、def __len__(self)
+class MyDataset(Dataset):
+    # 创建一个可迭代的Dataset类
+    def __init__(self, datax, datay):
+        self.data = datax
+        self.label = datay
+    # 定义可在DataLoader中被迭代执行的函数, 作用主要是对原始数据进行必要的预处理, 非必选
+    # 这个函数容易让人迷惑，因为用户不知道idx这个变量是哪里来的。
+    # 实际上，这个函数需要和DataLoader配合使用，这个函数会在DataLoader中被迭代执行，这里只要保证其预设格式(如下所示)，就可以和DataLoaderw无缝衔接
+    def __getitem__(self, idx):
+        data_temp = self.data[idx]
+	label = self.label[idx]
+        # 预处理
+	data_process = f_process(data_temp)  # f_process代指所有用户所需的预处理操作
+	return data_process, label
+    # 与DataLoader配合的官方内置函数, 决定了在DataLoader内被迭代调用的最大次数
+    def __len__(self):
+        return len(self.data)
+
+# (2) DataLoader：内部运行主要分为3个步骤
+# 1、按照Sampler定义的规则生成取数的序号顺序, 2、按照序号迭代地执行MyDataset中的getitem函数，并保存结果，3、如果设置了batchsize，则将结果按照batchsize数量一堆一堆打包
+dataloader = DataLoader(dataset=dataset, batch_size=batchsize, sampler=sampler)  # 返回的dataloader是一个可迭代的容器, 其迭代次数取决于dataset样本总数和预设的batchsize
+# 获取dataloader内容的途径1：按批获取特征数据和标签
+for batchdata in dataloader:
+    features, labels = batchdata[0], batchdata[1]
+# 获取dataloader内容的途径2：直接合并取出所有样本
+feature_all, label_all = dataloader.__iter__().next()
+
+# (3) Sampler: 生成样本序号次序的方法。本质上，其支持自定义和官方设定两种方式。
+# 1、官方设定
+SequentialSampler, RandomSampler, WeightedSampler, SubsetRandomSampler
+sampler = torch.utils.data.sampler.SequentialSampler(dataset)
+_ = DataLoader(dataset, sampler=sampler)
+# 2、自定义
+from torch.utils.data.sampler import Sampler
+class MySampler(Sampler):
+    # 初始化
+    def __init__(self, dataset):
+        self.dataset = dataset
+    # 生成一个可迭代的待采样序号全集--注意！是全集，不是一个数
+    def __iter__(self):
+        index = range(len(self.dataset))  # index需要是单层list，是DataLoader迭代采样的全集参照
+        return iter(index)
+
+    def __len__(self):
+        return len(self.dataset)  # 决定了迭代的最大次数
+# 采样的实际次数，由len(dataset)真实值、def__len__(self)设定值、以及def__iter__(self)的iter(index)长度，三者的最小值决定！！
+
 
 # 9 matplotlib小技巧
-
 
 # 9.1 水平、垂直线
 import matplotlib.pyplot as plt
@@ -603,6 +659,53 @@ onehot.scatter(dim=1, index=Tensor, src=torch.ones(N, num_classes).long())
 # pytorch中使用torch.manual_seed(seed_value), 进行随机数初始化:
 # 运行一次torch.manual_seed(seed_value), 其后生成的随机数变量集合[a1, b1, c2, d2]彼此都不同；
 # 再次运行torch.manual_seed(seed_value), 再次生成的集合[a2, b2, c2, d2]和上一次呈一一对应关系, 即a1=a2,..,d1=d2; 但a1 != b1 !=...d1.
+
+
+# 11 log日志相关
+https://www.cnblogs.com/yyds/p/6901864.html
+
+# 11.1 日志的作用
+# 仅讨论直接相关功能：一方面，日志可以和print一样实时在console显示出来; 另一方面，日志可以保存到本地，不用单独用excel进行程序信息记录，便于回溯。
+
+# 11.2 本地保存日志
+import logging
+# 配置日志输出形式
+logging.basicConfig(format='%(asctime)s - : %(message)s',
+                    level=logging.INFO,
+                    filename='XXX.log')  # format决定一条日志内容, level决定日志在console的显示级别，filename决定日志本地文件的名称
+# 记录一条log
+logging.info('xxx')  # 以INFO级别，在'XXX.log'本地文件中记录一条log('xxx')
+# 如果设置了本地保存log（在logging.basicConfig配置了filename属性），那么仅通过logging命令无法将日志打印到console
+
+# 11.3 实时打印日志
+# 在11.2基础上，既想保存日志到本地又想实时打印日志到console，需要增加如下代码
+logger = logging.getLogger('test')  # 'test'名称无所谓，任意即可
+handler = logging.StreamHandler()  # 类似一个抽取器, 从本地文件中读取日志信息
+formatter = logging.Formatter('%(asctime)s - : %(message)s')  # 设置抽取出的重整日志格式, 相当于二次过滤
+handler.setFormatter(formatter)  # 为抽取器添加格式
+handler.setLevel(logging.INFO)  # 为抽取器添加显示级别
+logger.addHandler(handler)  # 添加抽取器
+
+# 11.4 案例--本地保存+实时打印
+import logging
+logging.basicConfig(format='%(asctime)s - : %(message)s',
+                    level=logging.INFO,
+                    filename='XXX.log')
+logger = logging.getLogger('test')
+handler = logging.StreamHandler() 
+formatter = logging.Formatter('%(asctime)s - : %(message)s')
+handler.setFormatter(formatter)
+handler.setLevel(logging.INFO)
+logger.addHandler(handler)
+# 完成上述配置后, 仅保存本地、不打印到console，用如下指令:
+logging.info('仅保存本地')  # .info是指该条日志生成的级别为INFO，类似的级别还可以是.debug()/.warning()/.error()/.critical()
+# 既保存本地又打印到console
+logger.info('保存+打印')
+
+# 11.5 注意
+# (1) 如果要重新定义一个新的.log文件，需要重启一次console，在已有console中无法创建新.log文件
+# (2) 如果不该写.log命名，多次运行console，记录会被叠加续写。
+
 
 
 
