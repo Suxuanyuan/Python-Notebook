@@ -31,8 +31,9 @@ for i in range(20, 25):
 
 # 1.2 使用{} .format
 # 一般用于print语句， 不会出现与 % 冲突的情况
-for i in range(10, 15, 2):
-    print('我的名字叫 {} , 我的股份占{} %'.format('苏铉元', i))
+a = 0.1234567
+b = 'sxy'
+print('数字: {:.3f}, 名字: {}'.format(a, b))  # 通过 :.3f 设置3位有效数字
 
 # 1.3 使用 + str()
 # 一般用于简单的print连接
