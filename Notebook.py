@@ -531,13 +531,26 @@ up_3 = torch.from_numpy(down_3) == 0  # 生成相反矩阵(上三角矩阵)
 xx.squeeze()  # 不指定维度，会自动将变量xx中元素为1的维度压缩
 
 # 8.5 GPU相关
-# 查看GPU状态
+# 1)查看GPU状态
 print(torch.cuda.is_available())  # GPU是否可用
 print(torch.cuda.device_count())  # GPU个数
 print(torch.cuda.get_device_name(0))  # 第0个GPU名称
 print(torch.cuda.current_device())  # 当前GPU序号
-# 查看GPU使用情况
+# 2)查看GPU使用情况
 # 打开windows控制台，输入nvidia-smi，可以查看GPU状态
+# 3)转移张量到指定设备
+x = torch.ones(10, 1)
+print(x.device)  # cpu, 默认存储在cpu
+y = x.cuda(device=0)  # 转移到制定序号的gpu上，本案例gpu只有1个，因此设定device=0
+print(y.device)  # cuda:0
+# 4)创建张量到指令设备
+device_t = torch.device('cuda:0')  # 用专有格式定义设备
+y = torch.ones((10, 1), device=device_t)
+print(y)  # device='cuda:0'
+## 5)转移模型到指定设备
+net = torch.nn.Sequential(torch.nn.Linear(10, 1))
+net = net.to(device_t)
+print(next(net.parameters()).device)  # cuda:0
 
 # 8.6 查看网络模型参数
 for name, parameter in model.named_parameters():
