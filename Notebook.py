@@ -551,6 +551,8 @@ print(y)  # device='cuda:0'
 net = torch.nn.Sequential(torch.nn.Linear(10, 1))
 net = net.to(device_t)
 print(next(net.parameters()).device)  # cuda:0
+## 6)查看显存占用情况
+torch.cuda.memory_allocated(0) / 1048576)  # 字节换算为MB
 
 # 8.6 查看网络模型参数
 for name, parameter in model.named_parameters():
